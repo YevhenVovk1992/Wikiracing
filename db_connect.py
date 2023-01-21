@@ -1,4 +1,5 @@
 import psycopg2
+import threading
 
 from typing import Union
 
@@ -36,53 +37,56 @@ def get_page_from_db(title: str) -> Union[dict, None]:
     links_list = []
     with ConnectToPostgres('wikiracing') as db:
         cursor = db.cursor()
-        # cursor.execute(f"""select title from article where title = '{title.replace("'", "/")}'""")
-        # page = cursor.fetchone()
-
         cursor.execute(f"""select article.title from links
-    inner join article on article.article_id = links.link
-    where links.parent = (select article_id from article where title = '{title.replace("'", "/")}')
-    order by links.link""")
+        inner join article on article.article_id = links.link
+        where links.parent = (select article_id from article where title = '{title.replace("'", "/")}')
+        order by links.link""")
         link = cursor.fetchall()
+    if link:
         for el in link:
             links_list.append(el[0].replace("/", "'"))
-
-        if link:
-            page_dict.update({
-                'title': title,
-                'links': links_list
-            })
-            return page_dict
+        page_dict.update({
+            'title': title,
+            'links': links_list
+        })
+        return page_dict
     return None
 
 
-def write_page_to_db(title: str, links_list) -> None:
+def create_connection(link: str, title_id: tuple) -> None:
+    with ConnectToPostgres('wikiracing') as db:
+        cursor = db.cursor()
+        cursor.execute(f"""select article_id from article where title = '{link.replace("'", "/")}'""")
+        check_link = cursor.fetchone()
+        if not check_link:
+            cursor.execute(
+                f"""INSERT into article(title)
+                    values ('{link.replace("'", "/")}')"""
+            )
+            cursor.execute(f"""INSERT into links(parent, link) values (
+                                '{title_id[0]}',
+                                (select article_id from article where title = '{link.replace("'", "/")}')
+                                )""")
+        else:
+            cursor.execute(f"""INSERT into links(parent, link) values (
+                            '{title_id[0]}', {check_link[0]}
+                            )""")
 
+
+def write_page_to_db(title: str, links_list) -> None:
+    jobs = []
     with ConnectToPostgres('wikiracing') as db:
         cursor = db.cursor()
         cursor.execute(f"""select article_id from article where title = '{title.replace("'", "/")}'""")
         title_id = cursor.fetchone()
         if not title_id:
             cursor.execute(f"""INSERT into article(title) values ('{title.replace("'", "/")}')""")
-
-    with ConnectToPostgres('wikiracing') as db:
-        cursor = db.cursor()
-        for link in links_list:
-            cursor.execute(f"""select article_id from article where title = '{link.replace("'", "/")}'""")
-            check_link = cursor.fetchone()
-            if not check_link:
-                cursor.execute(
-                        f"""INSERT into article(title)
-                        values ('{link.replace("'", "/")}')"""
-                    )
-                cursor.execute(f"""INSERT into links(parent, link) values (
-                                    '{title_id[0]}',
-                                    (select article_id from article where title = '{link.replace("'", "/")}')
-                                    )""")
-            else:
-                cursor.execute(f"""INSERT into links(parent, link) values (
-                                '{title_id[0]}', {check_link[0]}
-                                )""")
+            cursor.execute(f"""select article_id from article where title = '{title.replace("'", "/")}'""")
+            title_id = cursor.fetchone()
+    for el in links_list:
+        thread = threading.Thread(target=create_connection, args=(el, title_id))
+        thread.start()
+        jobs.append(thread)
 
 
 def create_table_in_db() -> None:
