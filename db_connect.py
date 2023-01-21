@@ -73,8 +73,8 @@ def create_connection(link: str, title_id: tuple) -> None:
                             )""")
 
 
-def write_page_to_db(title: str, links_list) -> None:
-    jobs = []
+def write_page_to_db(title: str, links_list: list) -> None:
+    tasks = []
     with ConnectToPostgres('wikiracing') as db:
         cursor = db.cursor()
         cursor.execute(f"""select article_id from article where title = '{title.replace("'", "/")}'""")
@@ -86,7 +86,9 @@ def write_page_to_db(title: str, links_list) -> None:
     for el in links_list:
         thread = threading.Thread(target=create_connection, args=(el, title_id))
         thread.start()
-        jobs.append(thread)
+        tasks.append(thread)
+    for itm in tasks:
+        itm.join()
 
 
 def create_table_in_db() -> None:

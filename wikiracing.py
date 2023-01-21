@@ -67,8 +67,9 @@ class WikiRacer:
                     print('Get page:', current_page.title)
                     links = current_page.links
                     if len(links) > self.links_per_page:
-                        links = links[:self.links_per_page + 1]
-                    write_page_to_db(current['title'], links)
+                        links = links[:self.links_per_page]
+                    write_to_db_thread = threading.Thread(target=write_page_to_db, args=(current['title'], links))
+                    write_to_db_thread.start()
                 for link in links:
                     if link not in G:
                         G[link] = {
@@ -107,11 +108,10 @@ class WikiRacer:
                 pass
 
 
-
 if __name__ == "__main__":
     racer = WikiRacer()
     # print(racer.find_path('дружба', 'рим'))
     # print(racer.find_path('Мітохондріальна ДНК', 'Вітамін K'))
     # print(racer.find_path('Марка (грошова одиниця)', 'Китайський календар'))
-    # print(racer.find_path('Фестиваль', 'Пілястра'))
+    print(racer.find_path('Фестиваль', 'Пілястра'))
     # print(racer.find_path('Дружина (військо)', '6 жовтня'))

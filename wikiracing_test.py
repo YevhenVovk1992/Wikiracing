@@ -7,6 +7,14 @@ class WikiRacerTest(unittest.TestCase):
 
     racer = WikiRacer()
 
+    def test_correct_path(self):
+        correct_data = {'title': 'Рим', 'distance': 2, 'parent':
+            {'title': 'Якопо Понтормо', 'distance': 1, 'parent':
+                {'title': 'Дружба', 'distance': 0, 'parent': None}
+             }}
+        actual_path = ['Дружба', 'Якопо Понтормо', 'Рим']
+        self.assertEqual(self.racer.print_path(correct_data), actual_path)
+
     def test_1(self):
         path = self.racer.find_path('Дружба', 'Рим')
         self.assertEqual(path, ['Дружба', 'Якопо Понтормо', 'Рим'])
@@ -17,11 +25,11 @@ class WikiRacerTest(unittest.TestCase):
 
     def test_3(self):
         path = self.racer.find_path('Марка (грошова одиниця)', 'Китайський календар')
-        self.assertEqual(path, ['Марка (грошова одиниця)', '1549', 'Китайський календар'])
+        self.assertEqual(path, ['Марка (грошова одиниця)', '1924', 'Китайський календар'])
 
     def test_4(self):
         path = self.racer.find_path('Фестиваль', 'Пілястра')
-        self.assertEqual(path, )
+        self.assertEqual(path, [])
 
     def test_5(self):
         path = self.racer.find_path('Дружина (військо)', '6 жовтня')
