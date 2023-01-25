@@ -1,14 +1,23 @@
 import psycopg2
 import threading
 
+from dotenv import load_dotenv, dotenv_values
+from os.path import join, dirname
 from typing import Union
 
 
+def env_init() -> dict:
+    dotenv_path = join(dirname(__file__), '.env')
+    load_dotenv(dotenv_path)
+    return dotenv_values()
+
+
 class ConnectToPostgres:
-    user = 'postgres'
-    password = 'postgres'
-    host = "127.0.0.1"
-    port = "5432"
+    env = env_init()
+    user = env.get('DB_USER')
+    password = env.get('DB_PASSWORD')
+    host = env.get('DB_HOST')
+    port = env.get('DB_PORT')
 
     def __init__(self, database):
         self.database = database
@@ -35,7 +44,8 @@ class ConnectToPostgres:
 def get_page_from_db(title: str) -> Union[dict, None]:
     page_dict = {}
     links_list = []
-    with ConnectToPostgres('wikiracing') as db:
+    db_name = env_init()
+    with ConnectToPostgres(db_name.get('DB_NAME')) as db:
         cursor = db.cursor()
         cursor.execute(f"""select article.title from links
         inner join article on article.article_id = links.link
@@ -54,7 +64,8 @@ def get_page_from_db(title: str) -> Union[dict, None]:
 
 
 def create_connection(link: str, title_id: tuple) -> None:
-    with ConnectToPostgres('wikiracing') as db:
+    db_name = env_init()
+    with ConnectToPostgres(db_name.get('DB_NAME')) as db:
         cursor = db.cursor()
         cursor.execute(f"""select article_id from article where title = '{link.replace("'", "/")}'""")
         check_link = cursor.fetchone()
@@ -75,7 +86,8 @@ def create_connection(link: str, title_id: tuple) -> None:
 
 def write_page_to_db(title: str, links_list: list) -> None:
     tasks = []
-    with ConnectToPostgres('wikiracing') as db:
+    db_name = env_init()
+    with ConnectToPostgres(db_name.get('DB_NAME')) as db:
         cursor = db.cursor()
         cursor.execute(f"""select article_id from article where title = '{title.replace("'", "/")}'""")
         title_id = cursor.fetchone()
@@ -92,7 +104,8 @@ def write_page_to_db(title: str, links_list: list) -> None:
 
 
 def create_table_in_db() -> None:
-    with ConnectToPostgres('wikiracing') as db:
+    db_name = env_init()
+    with ConnectToPostgres(db_name.get('DB_NAME')) as db:
         cursor = db.cursor()
         query1 = """CREATE TABLE IF NOT EXISTS article
 (article_id SERIAL primary key, title varchar(150) not null);"""

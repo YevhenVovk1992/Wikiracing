@@ -110,8 +110,8 @@ class WikiRacer:
 
 if __name__ == "__main__":
     racer = WikiRacer()
-    # print(racer.find_path('дружба', 'рим'))
-    # print(racer.find_path('Мітохондріальна ДНК', 'Вітамін K'))
-    # print(racer.find_path('Марка (грошова одиниця)', 'Китайський календар'))
+    print(racer.find_path('дружба', 'рим'))
+    print(racer.find_path('Мітохондріальна ДНК', 'Вітамін K'))
+    print(racer.find_path('Марка (грошова одиниця)', 'Китайський календар'))
     print(racer.find_path('Фестиваль', 'Пілястра'))
-    # print(racer.find_path('Дружина (військо)', '6 жовтня'))
+    print(racer.find_path('Дружина (військо)', '6 жовтня'))
