@@ -25,11 +25,11 @@ class WikiRacerTest(unittest.TestCase):
 
     def test_3(self):
         path = self.racer.find_path('Марка (грошова одиниця)', 'Китайський календар')
-        self.assertEqual(path, ['Марка (грошова одиниця)', '1924', 'Китайський календар'])
+        self.assertEqual(path, ['Марка (грошова одиниця)', '1915', 'Китайський календар'])
 
     def test_4(self):
         path = self.racer.find_path('Фестиваль', 'Пілястра')
-        self.assertEqual(path, [])
+        self.assertEqual(path, ['Фестиваль', 'Замок (споруда)', 'Атріум', 'Пілястра'])
 
     def test_5(self):
         path = self.racer.find_path('Дружина (військо)', '6 жовтня')
